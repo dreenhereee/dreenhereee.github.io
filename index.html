@@ -56,6 +56,13 @@ nav{max-width:1040px;margin:0 auto;display:flex;align-items:center;gap:8px;paddi
 .lang.sq .knob{animation:sq .6s var(--e)}
 @keyframes sq{0%{scale:1.24 .86}45%{scale:.95 1.1}100%{scale:1 1}}
 .lang.ni .knob,.lang.ni::before{transition:none!important}
+.sw2{width:60px;--sw:1}
+.sw2::before{background:linear-gradient(90deg,rgba(255,200,90,.12),rgba(255,184,64,.6))}
+.sw2 .lt.on{color:#c27a00}
+.sw2 .lt:first-of-type.on{color:var(--sky3)}
+#toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 22px);z-index:60;transform:translate(-50%,20px);opacity:0;padding:10px 18px;border-radius:999px;font:700 .88rem var(--b);color:var(--ink);background:rgba(255,255,255,.92);border:1px solid #fff;box-shadow:0 10px 30px -8px rgba(27,127,214,.45);pointer-events:none;white-space:nowrap;transition:opacity .4s var(--e),transform .5s var(--e)}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+@media (max-width:480px){nav>.btn{display:none}}
 .btn{display:inline-block;font:700 .98rem var(--b);text-decoration:none;color:#fff;padding:13px 26px;border-radius:999px;border:0;cursor:pointer;background:linear-gradient(180deg,#6CC6FF,var(--sky3));box-shadow:0 10px 26px -6px rgba(27,127,214,.55),inset 0 1.5px 0 rgba(255,255,255,.6);transition:transform .35s var(--e),box-shadow .35s;will-change:transform;position:relative;overflow:hidden}
 .btn::after{content:"";position:absolute;left:-60%;top:0;width:40%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.65),transparent);transform:skewX(-20deg);transition:left .7s var(--e)}
 .btn:hover::after{left:130%}
@@ -181,6 +188,7 @@ footer{padding:30px 20px calc(30px + env(safe-area-inset-bottom,0px));text-align
 <header id="hd"><nav class="g">
 <a class="logo" href="#home">Dreen</a>
 <div class="links"><a href="#tentang" data-en="About">Tentang</a><a href="#karya">Port ROM</a><a href="#proses" data-en="Process">Proses</a><a href="#desain" data-en="Design">Desain</a><a href="#kontak" data-en="Contact">Kontak</a></div>
+<div class="lang sw2" id="lite" role="switch" aria-checked="false" tabindex="0" aria-label="Mode ringan / Lite mode" title="Mode ringan / Lite mode"><i class="knob"></i><span class="lt on"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4z"/></svg></span><span class="lt"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M13 2L4 14h6l-1 8 9-12h-6z"/></svg></span></div>
 <div class="lang" id="lang" role="switch" aria-checked="false" tabindex="0" aria-label="Ganti bahasa / Switch language"><i class="knob"></i><span class="lt on">ID</span><span class="lt">EN</span></div>
 <a class="btn sm mag" href="#kontak" data-en="Hire me">Rekrut gue</a>
 </nav></header>
@@ -279,6 +287,7 @@ footer{padding:30px 20px calc(30px + env(safe-area-inset-bottom,0px));text-align
 </main>
 <footer data-en="Ido a.k.a Dreen. Do it now or never.">Ido a.k.a Dreen. Lakukan sekarang atau tidak selamanya.</footer>
 
+<div id="toast" role="status" aria-live="polite"></div>
 <div id="lb" role="dialog" aria-modal="true" aria-label="Pratinjau gambar"><button id="lbx" type="button" aria-label="Tutup">&times;</button><img decoding="async" loading="lazy" alt=""></div>
 <script>
 (function(){
@@ -306,32 +315,38 @@ setInterval(function(){if(rd)return;wd.style.transition='opacity .4s,transform .
 var nm=document.getElementById('nm'),ms=document.getElementById('ms'),sd=document.getElementById('send'),N='6285768878279';
 function up(){var m=(lg==='en'?'Hi Ido, ':'Halo Ido, ')+(nm.value?(lg==='en'?"I'm ":'gue ')+nm.value+'. ':'')+ms.value;sd.href='https://wa.me/'+N+'?text='+encodeURIComponent(m)}
 nm.addEventListener('input',up);ms.addEventListener('input',up);
-// mode ringan otomatis kalau HP seret. Paksa: ?lite=1, matikan: ?lite=0
-var qs=location.search;if(/lite=1/.test(qs))document.documentElement.classList.add('lite');
-else if(!/lite=0/.test(qs)){var fk=0,fn=0,fs=0,fl=performance.now(),fd=false;(function fr(ts){if(fd)return;var d=ts-fl;fl=ts;if(++fk>30&&d>0&&d<150){fs+=d;fn++}if(fn>=90){fd=true;if(fs/fn>22)document.documentElement.classList.add('lite');return}requestAnimationFrame(fr)})(fl)}
 // language
 function setLang(l){lg=l;document.documentElement.lang=l;
 $('[data-en]').forEach(function(el){if(el._o===undefined)el._o=el.innerHTML;el.innerHTML=l==='en'?el.dataset.en:el._o});
 nm.placeholder=l==='en'?'Your name':'Nama lo';ms.placeholder=l==='en'?'Write a message...':'Tulis pesan...';
 wi=0;wd.textContent=WS[l][0];up();try{localStorage.setItem('lang',l)}catch(e){}}
-// toggle ala iOS: bisa digeser, bisa di-tap
-var tgl=document.getElementById('lang'),kn=tgl.querySelector('.knob'),lts=tgl.querySelectorAll('.lt'),pos=0,mx=38,down=false,drag=false,sx0=0,p0=0,lx=0,lt0=0;
-function dist(){return Math.max(tgl.clientWidth-6-kn.offsetWidth,1)}
-function paint(x){tgl.style.setProperty('--x',x+'px');tgl.style.setProperty('--p',Math.max(0,Math.min(1,x/mx)));var i=x>mx/2?1:0;lts[0].classList.toggle('on',i===0);lts[1].classList.toggle('on',i===1)}
-function snap(i){mx=dist();pos=i*mx;paint(pos);tgl.setAttribute('aria-checked',i===1?'true':'false')}
-function squish(){tgl.classList.remove('sq');void tgl.offsetWidth;tgl.classList.add('sq');setTimeout(function(){tgl.classList.remove('sq')},650)}
-function go(i){snap(i);squish();var l=i===1?'en':'id';if(l!==lg)setLang(l)}
-tgl.addEventListener('pointerdown',function(e){down=true;drag=false;sx0=lx=e.clientX;lt0=e.timeStamp;p0=pos;mx=dist();tgl.classList.add('dn');try{tgl.setPointerCapture(e.pointerId)}catch(x){}});
-tgl.addEventListener('pointermove',function(e){if(!down)return;var dx=e.clientX-sx0;
-if(!drag&&Math.abs(dx)>3){drag=true;tgl.classList.add('mv')}
-if(drag){pos=Math.max(0,Math.min(mx,p0+dx));paint(pos);var v=Math.abs(e.clientX-lx)/Math.max(e.timeStamp-lt0,1);
-tgl.style.setProperty('--sx',(1.2+Math.min(v*.12,.3)).toFixed(3));tgl.style.setProperty('--sy',(1.16-Math.min(v*.06,.12)).toFixed(3));lx=e.clientX;lt0=e.timeStamp}});
-function up2(){if(!down)return;down=false;tgl.classList.remove('dn','mv');tgl.style.removeProperty('--sx');tgl.style.removeProperty('--sy');go(drag?(pos>mx/2?1:0):(lg==='id'?1:0));drag=false}
-tgl.addEventListener('pointerup',up2);tgl.addEventListener('pointercancel',up2);
-tgl.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go(lg==='id'?1:0)}else if(e.key==='ArrowLeft')go(0);else if(e.key==='ArrowRight')go(1)});
-tgl.classList.add('ni');setLang('id');var sv=null;try{sv=localStorage.getItem('lang')}catch(e){}
-if(sv==='en'){setLang('en');snap(1)}else snap(0);
-requestAnimationFrame(function(){requestAnimationFrame(function(){tgl.classList.remove('ni')})});
+// switch generik ala iOS: bisa digeser, di-tap, dan lewat keyboard
+function mkSw(el,onset){var kn=el.querySelector('.knob'),lts=el.querySelectorAll('.lt'),cur=0,pos=0,mx=20,down=false,drag=false,sx0=0,p0=0,lx=0,t0=0;
+function dist(){return Math.max(el.clientWidth-6-kn.offsetWidth,1)}
+function paint(x){el.style.setProperty('--x',x+'px');el.style.setProperty('--p',Math.max(0,Math.min(1,x/mx)));var i=x>mx/2?1:0;lts[0].classList.toggle('on',i===0);lts[1].classList.toggle('on',i===1)}
+function snap(i){mx=dist();cur=i;pos=i*mx;paint(pos);el.setAttribute('aria-checked',i===1?'true':'false')}
+function squish(){el.classList.remove('sq');void el.offsetWidth;el.classList.add('sq');setTimeout(function(){el.classList.remove('sq')},650)}
+function go(i){var ch=i!==cur;snap(i);squish();if(ch)onset(i)}
+el.addEventListener('pointerdown',function(e){down=true;drag=false;sx0=lx=e.clientX;t0=e.timeStamp;p0=pos;mx=dist();el.classList.add('dn');try{el.setPointerCapture(e.pointerId)}catch(x){}});
+el.addEventListener('pointermove',function(e){if(!down)return;var dx=e.clientX-sx0;
+if(!drag&&Math.abs(dx)>3){drag=true;el.classList.add('mv')}
+if(drag){pos=Math.max(0,Math.min(mx,p0+dx));paint(pos);var v=Math.abs(e.clientX-lx)/Math.max(e.timeStamp-t0,1);
+el.style.setProperty('--sx',(1.2+Math.min(v*.12,.3)).toFixed(3));el.style.setProperty('--sy',(1.16-Math.min(v*.06,.12)).toFixed(3));lx=e.clientX;t0=e.timeStamp}});
+function end(){if(!down)return;down=false;el.classList.remove('dn','mv');el.style.removeProperty('--sx');el.style.removeProperty('--sy');go(drag?(pos>mx/2?1:0):(cur===0?1:0));drag=false}
+el.addEventListener('pointerup',end);el.addEventListener('pointercancel',end);
+el.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go(cur===0?1:0)}else if(e.key==='ArrowLeft')go(0);else if(e.key==='ArrowRight')go(1)});
+return{snap:snap}}
+var tgl=document.getElementById('lang'),lte=document.getElementById('lite'),root=document.documentElement,toast=document.getElementById('toast'),tt,man=false;
+var LG=mkSw(tgl,function(i){var l=i===1?'en':'id';if(l!==lg)setLang(l)});
+function say(){var on=root.classList.contains('lite');toast.textContent=lg==='en'?(on?'Lite mode on':'Lite mode off'):(on?'Mode ringan aktif':'Mode ringan mati');toast.classList.add('on');clearTimeout(tt);tt=setTimeout(function(){toast.classList.remove('on')},1800)}
+var LT=mkSw(lte,function(i){man=true;root.classList.toggle('lite',i===1);try{localStorage.setItem('lite',i===1?'1':'0')}catch(e){}say()});
+function setLite(on){root.classList.toggle('lite',on);LT.snap(on?1:0)}
+tgl.classList.add('ni');lte.classList.add('ni');setLang('id');
+var sv=null,lp=null,qs=location.search;try{sv=localStorage.getItem('lang');lp=localStorage.getItem('lite')}catch(e){}
+if(sv==='en'){setLang('en');LG.snap(1)}else LG.snap(0);
+if(/lite=1/.test(qs))setLite(true);else if(/lite=0/.test(qs))setLite(false);else if(lp==='1')setLite(true);else if(lp==='0')setLite(false);
+else{LT.snap(0);var fk=0,fn=0,fs=0,fl=performance.now(),fd=false;(function fr(ts){if(fd||man)return;var d=ts-fl;fl=ts;if(++fk>30&&d>0&&d<150){fs+=d;fn++}if(fn>=90){fd=true;if(fs/fn>22&&!man){setLite(true);say()}return}requestAnimationFrame(fr)})(fl)}
+requestAnimationFrame(function(){requestAnimationFrame(function(){tgl.classList.remove('ni');lte.classList.remove('ni')})});
 var lbo=document.getElementById('lb'),li=lbo.querySelector('img');
 function cl(){lbo.classList.remove('on');document.body.style.overflow=''}
 $('.ph').forEach(function(b){b.addEventListener('click',function(){var im=b.querySelector('img');li.src=im.src;li.alt=im.alt;li.className=b.closest('.dash')?'wd':'';lbo.classList.add('on');document.body.style.overflow='hidden'})});
